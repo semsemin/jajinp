@@ -1,7 +1,7 @@
 import os
 import json
 
-# gpt api key 가져오는 함수
+# gpt api key 媛��졇�삤�뒗 �븿�닔
 def get_secret_key(filename='secrets.json', key='GPT_API_KEY'):
     script_dir = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(script_dir, filename)
