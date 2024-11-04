@@ -3,10 +3,10 @@ import base64
 from openai import OpenAI
 from secrets_manager import get_secret_key
 
-# gpt api key 媛��졇�삤湲�
+# gpt api key 불러오기
 gpt_key = get_secret_key()
 
-# gpt �쓳�떟媛��졇�삤湲�
+# gpt 응답받는 함수
 def get_gpt_response():
     client = OpenAI(api_key=gpt_key)
     response = client.chat.completions.create(
@@ -18,6 +18,7 @@ def get_gpt_response():
     )
     print(response.choices[0].message.content)
 
+# gpt로 이미지 글자 인식 함수
 def gpt_img(image_path):
     with open(image_path, "rb") as image_file:
         base64_image= base64.b64encode(image_file.read()).decode("utf-8")

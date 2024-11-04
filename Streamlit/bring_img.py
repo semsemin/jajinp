@@ -43,7 +43,7 @@ def upload_image():
         with open(image_path, 'wb') as f:
             f.write(img_file.getbuffer())
 
-        st.success('이미지 업로드'+ image_path)
+        st.success('이미지 업로드 '+ image_path)
         img = Image.open(image_path)
         st.image(img)
 
