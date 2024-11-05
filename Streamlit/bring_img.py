@@ -24,7 +24,7 @@ def run_camera():
         st.success('이미지 업로드'+ image_path)
         
         return image_path 
-    return None
+    return 
 
 def upload_image():
     st.subheader('이미지 업로드')
