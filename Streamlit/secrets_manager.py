@@ -1,15 +1,14 @@
 import os
 import json
 
-# gpt api key 媛��졇�삤�뒗 �븿�닔
-def get_secret_key(filename='secrets.json', key='GPT_API_KEY'):
+def get_api_key(api_name, filename='secrets.json'):
     script_dir = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(script_dir, filename)
 
     try:
         with open(file_path, 'r') as file:
             secrets = json.load(file)
-        return secrets.get(key)
+        return secrets.get(api_name)
     except FileNotFoundError:
         print(f"The file {filename} was not found.")
         return None

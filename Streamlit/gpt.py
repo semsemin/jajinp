@@ -1,10 +1,10 @@
 import streamlit as st
 import base64
 from openai import OpenAI
-from secrets_manager import get_secret_key
+from secrets_manager import get_api_key
 
 # gpt api key 불러오기
-gpt_key = get_secret_key()
+gpt_key = get_api_key(api_name='GPT_API_KEY')
 
 # gpt 응답받는 함수
 def get_gpt_response():
