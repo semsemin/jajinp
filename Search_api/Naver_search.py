@@ -1,6 +1,6 @@
 import urllib.request
 import json
-from Streamlit.secrets_manager import get_api_key
+from ..Streamlit.secrets_manager import get_api_key
 
 # 네이버 API 클라이언트 정보 설정
 client_id = get_api_key(api_name='CLIENT_ID')
@@ -45,6 +45,10 @@ def parse_json_response(json_data):
                 "title": item["title"],
                 "link": item["link"],
                 "price": item["lprice"],  # 낮은 가격 정보
+                "hprice" : item["hprice"],
+                "image" : item["image"],
+                "mallName" : item["mallName"]
+
             })
         
         return json.dumps(product_info, indent=4, ensure_ascii=False)
@@ -66,23 +70,3 @@ for product in extracted_data:
             print(json_result)
             print("\n" + "="*50 + "\n")
 
-
-# import urllib.request
-# import requests
-# import urllib
-# from Streamlit.secrets_manager import get_api_key
-
-# client_id = get_api_key(api_name='CLIENT_ID')
-# client_secret = get_api_key(api_name='CLIENT_SECRET')
-
-# query = "주식"
-# query = urllib.parse.quote(query)
-
-# url = "https://openapi.naver.com/v1/search/webkr?query=" + query
-
-# request = urllib.request.Request(url)
-# request.add_header('X-Naver-Client-Id', client_id)
-# request.add_header('X-Naver-Client-Secret', client_secret)
-
-# response = urllib.request.urlopen(request)
-# print(response.read().decode('utf-8'))
