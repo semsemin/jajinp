@@ -1,6 +1,6 @@
 import urllib.request
 import json
-from ..Streamlit.secrets_manager import get_api_key
+from Streamlit.secrets_manager import get_api_key
 
 # 네이버 API 클라이언트 정보 설정
 client_id = get_api_key(api_name='CLIENT_ID')
