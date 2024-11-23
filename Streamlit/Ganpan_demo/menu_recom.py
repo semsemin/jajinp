@@ -11,7 +11,6 @@ from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.runnable import RunnablePassthrough
 
-
 os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
 os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
 

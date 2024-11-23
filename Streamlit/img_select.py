@@ -2,11 +2,8 @@ import streamlit as st
 from PIL import Image
 import bring_img
 import gpt
-from product_data import fetch_online_product_data
-from st_sort import display_sorted_products  # st_sort.py에서 display_sorted_products 가져오기
 from image_cropper import crop_and_save_image  # 이미지 크롭 및 저장 기능
 from recommand_algo import generate_content_based_recommendations  # recommand_algo.py에서 추천 알고리즘 함수 가져오기
-from display_total_recommendation import display_recommendations  # display_total_recommendation.py에서 결과 출력 함수 가져오기
 
 def img_select(task_type):
     st.title("ItemInsight")
