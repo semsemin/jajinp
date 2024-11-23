@@ -24,6 +24,8 @@ def get_gpt_response(image_path):
                 }}
             ]}
         ],
+        temperature=0.0,
+
     )
 
     response_content = response.choices[0].message.content
@@ -96,7 +98,8 @@ def gpt_img(image_path):
                 "url": f"data:image/png;base64,{base64_image}"}
             }  
         ]}
-        ]
+        ],   
+        temperature=0.0,
     )
     print(response.choices[0].message.content)  
     

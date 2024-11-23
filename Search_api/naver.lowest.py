@@ -1,12 +1,11 @@
 import requests
 import json
 import re
+from Streamlit.secrets_manager import get_api_key
 
-# secret.json 파일에서 CLIENT_ID와 CLIENT_SECRET 읽기
-with open("Streamlit/secrets.json") as f:
-    secrets = json.load(f)
-    CLIENT_ID = secrets["CLIENT_ID"]
-    CLIENT_SECRET = secrets["CLIENT_SECRET"]
+# Streamlit secrets에서 API 키 가져오기
+client_id = get_api_key(api_name='CLIENT_ID')
+client_secret = get_api_key(api_name='CLIENT_SECRET')
 
 def remove_html_tags(text):
     # 정규 표현식을 사용하여 HTML 태그 제거
@@ -28,8 +27,8 @@ def get_lowest_price(product_json):
     
     # 헤더 설정
     headers = {
-        'X-Naver-Client-Id': CLIENT_ID,
-        'X-Naver-Client-Secret': CLIENT_SECRET
+        'X-Naver-Client-Id': client_id,  # 수정된 변수 이름
+        'X-Naver-Client-Secret': client_secret  # 수정된 변수 이름
     }
     
     # API 호출
@@ -42,12 +41,12 @@ def get_lowest_price(product_json):
         if data['items']:
             lowest_price_item = data['items'][0]
             lowest_price = lowest_price_item['lprice']
-            product_name = remove_html_tags(lowest_price_item['title'])  # HTML 태그 제거
-            return f"상품명: {product_name}\n최저가: {lowest_price}원\n"
+            cleaned_product_name = remove_html_tags(lowest_price_item['title'])  # HTML 태그 제거
+            return f"상품명: {cleaned_product_name}\n최저가: {lowest_price}원\n"
         else:
-            return "검색된 상품이 없습니다.\n"
+            return f"상품 '{product_name}'에 대한 검색 결과가 없습니다.\n"
     else:
-        return f"API 호출 실패, 상태 코드: {response.status_code}\n"
+        return f"API 호출 실패, 상태 코드: {response.status_code}, 응답: {response.text}\n"
 
 def get_lowest_prices_for_multiple_products(product_list):
     results = []
@@ -61,4 +60,6 @@ product_list = [
     {"product name": "아이디얼포맨 퍼펙트올인원 상시기획", "price": "20900"},
     {"product name": "아이디얼포맨 시카올인원 상시기획", "price": "19900"},
 ]
+
+# 최저가 검색 결과 출력
 print(get_lowest_prices_for_multiple_products(product_list))

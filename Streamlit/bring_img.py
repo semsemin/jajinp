@@ -48,4 +48,3 @@ def upload_image():
         st.image(img)
 
         return image_path
-
