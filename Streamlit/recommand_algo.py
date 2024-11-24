@@ -21,29 +21,38 @@ online_data = [
     {"product_name": "동원 고추참치100g", "review_count": 1020, "rating": 4.5, "online_price": 3000}
 ]
 
+# 최대 별점 추정 함수
+def estimate_max_rating(rating):
+    if rating > 5:  # 별점이 5점을 초과하면 10점 만점으로 간주
+        return 10
+    return 5
+
 # 현장과 온라인 정보 결합
 merged_data = []
 for local_item in local_data:
     for online_item in online_data:
         if local_item["product_name"] == online_item["product_name"]:
+            max_rating = estimate_max_rating(online_item["rating"])  # 최대 별점 추정
+            normalized_rating = (online_item["rating"] / max_rating) * 5  # 별점 정규화
             merged_data.append({
                 "product_name": local_item["product_name"],
                 "local_price": local_item["price"],
                 "online_price": online_item["online_price"],
                 "review_count": online_item["review_count"],
                 "rating": online_item["rating"],
+                "normalized_rating": normalized_rating,  # 정규화된 별점 추가
                 "recommend_score": 0  # Placeholder for recommendation score
             })
 
-# 데이터를 데이터 프레임으로 변환 -> 손쉬운 조작을 위해
+# 데이터를 데이터 프레임으로 변환
 df = pd.DataFrame(merged_data)
 
-# 점수 계산 (비율 조정가능)
+# 점수 계산 (정규화된 별점 기반)
 df['price_difference'] = abs(df['local_price'] - df['online_price'])
 df['recommend_score'] = (
-    df['review_count'] * 0.2 +
-    df['rating'] * 100 * 0.6 -
-    df['price_difference'] * 0.2
+    df['review_count'] * 0.2 +  # 리뷰 수 가중치
+    df['normalized_rating'] * 0.3 +  
+    df['price_difference'] * 0.5  # 가격 차이 페널티
 )
 
 # 추천 점수에 따라 sort

@@ -17,11 +17,12 @@ os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
 os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
 
 # 사용자 입력 데이터
-input_data = {
-    'book_titles': ["해리포터와 마법사의 돌", "반지의 제왕", "어린 왕자"]
-}
+input_data = [
+    {"title": "해리포터와 마법사의 돌"},
+    {"title": "반지의 제왕"},
+    {"title": "어린 왕자"}
+]
 
-book_titles = input_data['book_titles']
 
 # 텍스트 Splitter 설정
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -54,8 +55,8 @@ def format_docs(docs):
 # 결과 저장
 all_responses = []
 
-for book_title in book_titles:
-    query = f"{book_title} 책의 줄거리를 검색해서 알려줘."
+for book_title in input_data:
+    query = f"{book_title['title']} 책의 줄거리를 검색해서 알려줘."
 
     # Tavily 검색 수행
     web_search = TavilySearchResults(max_results=7)
