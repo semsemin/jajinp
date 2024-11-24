@@ -2,3 +2,4 @@ Streamlit/secrets.json
 .DS_Store
 __pycache__
 chroma_db/
+/Streamlit/chroma_db
