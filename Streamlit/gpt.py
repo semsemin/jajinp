@@ -18,7 +18,7 @@ def get_gpt_response(image_path):
         messages=[
             {"role": "system", "content": "You are an assistant specialized in extracting product names and prices from price tags. Please locate each product label (up to 8 labels) within the image. For each label, extract the text *exactly as it appears on the label*, including any unique spellings, symbols, parentheses, or formatting. Extract the product name precisely as written, as though performing OCR, and capture any numbers as the price. Return the extracted information in JSON format without any line breaks or extra spaces. The format should be as follows: [{'product name': 'exact text from label for product name', 'price': 'price'}]. For multiple products, return a list of objects, omitting '원' or '₩' symbols from the price so that only the numeric value remains."},
             {"role": "user", "content": [
-                {"type": "text", "text": "Based on this data, please write the name and price in JSON format as [{'product name': 'exact text from label for product name', 'price': 'price'}]. For multiple products, return a list of objects without '원' or '₩' in price, just the number. Please read and transcribe each label's text exactly as it appears, capturing the unique spelling and formatting in the product name."},
+                {"type": "text", "text": "Based on this data, please write the name and price in JSON format as [{'product_name': 'exact text from label for product name', 'price': 'price'}]. For multiple products, return a list of objects without '원' or '₩' in price, just the number. Please read and transcribe each label's text exactly as it appears, capturing the unique spelling and formatting in the product name."},
                 {"type": "image_url", "image_url": {
                     "url": f"data:image/png;base64,{base64_image}"
                 }}
@@ -30,11 +30,13 @@ def get_gpt_response(image_path):
 
     response_content = response.choices[0].message.content
 
+
     # 응답 내용 문자열을 JSON 형식으로 정제
     formatted_response = response_content.replace("'", '"')
     formatted_response = formatted_response.replace('\n', '').strip()
     cleaned_string = formatted_response.replace('json', '').strip()
     cleaned_string = cleaned_string.replace('```', '')
+
 
     try:
         predicted_json = json.loads(cleaned_string)
@@ -66,15 +68,18 @@ def get_product_data(image_path):
     )
 
     response_content = response.choices[0].message.content
+    print("GPT 응답 원본:", response_content)
 
-    # 응답 내용 문자열을 JSON 형식으로 정제
-    formatted_response = response_content.replace("'", '"')
-    formatted_response = formatted_response.replace('\n', '').strip()
-    cleaned_string = formatted_response.replace('json', '').strip()
-    cleaned_string = cleaned_string.replace('```', '')
+    if response_content.startswith("```json"):
+        response_content = response_content[7:]  # ```json 제거
+    if response_content.endswith("```"):
+        response_content = response_content[:-3]  # ``` 제거
+
+    # 작은따옴표를 큰따옴표로 변환
+    response_content = response_content.replace("'", '"')
 
     try:
-        predicted_json = json.loads(cleaned_string)
+        predicted_json = json.loads(response_content)
     except json.JSONDecodeError:
         print("JSONDecodeError: 응답 내용을 JSON 형식으로 변환할 수 없습니다.")
         predicted_json = {}  # 변환 실패 시 빈 딕셔너리 반환
@@ -93,7 +98,7 @@ def gpt_img(image_path):
         messages =[
             {"role" : "system" , "content" :" You are an assistant specialized in extracting product names and prices from price tags. Please read the price tag and extract the product names and their corresponding prices."},
             {"role": "user", "content": [
-            {"type": "text", "text": "Based on this data, please write the name and price in JSON format as [{{'product name': 'product name', 'price': 'price'}}]. For multiple products, return a list of objects without '원' or '₩' in price, just the number."},
+            {"type": "text", "text": "Based on this data, please write the name and price in JSON format as {'product_name': 'product name', 'price': 'price'}. For multiple products, return a list of objects without '원' or '₩' in price, just the number."},
             {"type": "image_url", "image_url": {
                 "url": f"data:image/png;base64,{base64_image}"}
             }  
@@ -108,4 +113,5 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
     return base64_image
+
 
