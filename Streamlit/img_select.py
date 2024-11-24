@@ -41,7 +41,6 @@ def img_select(task_type):
                     
                     # 정렬 및 표시를 위해 session_state에 저장
                     st.session_state["product_data"] = detailed_data
-                    st.write("데이터가 정렬 및 표시될 준비가 완료되었습니다.")
                     local_data = result
 
                     # display_sorted_products 호출
