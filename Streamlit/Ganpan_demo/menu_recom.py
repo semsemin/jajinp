@@ -114,4 +114,6 @@ def recommend_best_menus(input_data):
     print("\n[추천 베스트 메뉴]")
     print(json.dumps(result, indent=4, ensure_ascii=False))
 
+
     return result
+

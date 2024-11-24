@@ -8,74 +8,66 @@ from langchain.schema.runnable import RunnablePassthrough
 import os
 import json
 
-os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
-os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
+def get_reviews_and_ratings(product_data):
+    # Set environment variables
+    os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
+    os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
 
-# 입력 데이터
-product_data = [
-    {'product_name': '동원 매운고추참치 90g', 'price': 3300},
-    {'product_name': '동원 야채참치 90g', 'price': 3300}
-]
+    # Initialize GPT settings
+    llm = ChatOpenAI(
+        model='gpt-4o',
+        temperature=0,
+        max_tokens=500,
+    )
 
-# 결과 저장
-all_responses = {}
+    # Define prompt
+    template = '''    
+        You are a shopping assistant AI. Answer the question based on the context below.
+        Respond in JSON format with keys 'review_count' and 'rating'.
+        
+        Context: {context}
+        
+        Question: {question}
+        
+        Response (JSON format):
+    '''
+    prompt = ChatPromptTemplate.from_template(template)
 
-# GPT 설정
-llm = ChatOpenAI(
-    model='gpt-4o',
-    temperature=0,
-    max_tokens=500,
-)
+    # JSON Output Parser
+    json_parser = JsonOutputParser()
 
-# Prompt 정의
-template = '''    
-    You are a shopping assistant AI. Answer the question based on the context below.
-    Respond in JSON format with keys 'review_count' and 'rating'.
-    
-    Context: {context}
-    
-    Question: {question}
-    
-    Response (JSON format):
-'''
-prompt = ChatPromptTemplate.from_template(template)
+    # Create chain
+    chain = (
+        {'context': RunnablePassthrough(), 'question': RunnablePassthrough()}
+        | prompt
+        | llm
+        | json_parser
+    )
 
-# JSON Output Parser
-json_parser = JsonOutputParser()
+    # Tavily search setup
+    web_search = TavilySearchResults(max_results=10)
 
-# Chain 생성
-chain = (
-    {'context': RunnablePassthrough(), 'question': RunnablePassthrough()}
-    | prompt
-    | llm
-    | json_parser
-)
+    # Store results
+    all_responses = {}
 
-# Tavily 검색 설정
-web_search = TavilySearchResults(max_results=10)
+    # Loop through products
+    for product in product_data:
+        query = f"{product['product_name']}에 대한 리뷰, 별점을 https://www.coupang.com 에서 검색해서 알려줘"
 
-# 루프를 통해 각 제품 처리
-for product in product_data:
-    query = f"{product['product_name']}에 대한 리뷰, 별점을 https://www.coupang.com 에서 검색해서 알려줘"
-    # print(f"질문: {query}")
+        # Perform Tavily search
+        search_results = web_search.invoke(query)
 
-    # Tavily 검색 수행
-    search_results = web_search.invoke(query)
+        # Prepare context from search results
+        context = "\n\n".join([f"URL: {result['url']}\n내용: {result['content']}" for result in search_results])
 
-    # 검색 결과를 바로 context로 전달
-    context = "\n\n".join([f"URL: {result['url']}\n내용: {result['content']}" for result in search_results])
+        # Run chain
+        response = chain.invoke({'context': context, 'question': query})
 
-    # Chain 실행
-    response = chain.invoke({'context': context, 'question': query})
-    
-    # 결과를 딕셔너리에 저장
-    all_responses[product['product_name']] = {
-        'product_name': product['product_name'],
-        'review_count': response.get('review_count', 'N/A'),
-        'rating': response.get('rating', 'N/A')
-    }
+        # Save results
+        all_responses[product['product_name']] = {
+            'product_name': product['product_name'],
+            'review_count': response.get('review_count', 'N/A'),
+            'rating': response.get('rating', 'N/A')
+        }
 
-# 최종 결과 출력
-print("최종 결과:")
-print(json.dumps(all_responses, ensure_ascii=False, indent=2))
-  
+    return all_responses
