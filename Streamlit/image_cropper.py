@@ -11,7 +11,7 @@ def crop_and_save_image(image_path, save_path=None):
     
     # 크롭된 이미지 보여주기
     st.write("크롭된 이미지:")
-    st.image(cropped_img, use_container_width=True)  # 수정된 부분
+    st.image(cropped_img) 
 
     # 저장 경로 설정 (save_path가 없으면 원본 경로에 "_cropped" 추가)
     if save_path is None:
