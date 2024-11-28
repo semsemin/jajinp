@@ -1,6 +1,9 @@
 import json
-from naver_lowest import get_naver_api_credentials, search_product, parse_json_response
-from Tavily_chroma import get_reviews_and_ratings
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from Label_demo.naver_lowest import get_naver_api_credentials, search_product, parse_json_response
+from Label_demo.label_rating import get_reviews_and_ratings
 
 
 def fetch_online_product_data(product_data):

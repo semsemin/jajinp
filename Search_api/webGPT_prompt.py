@@ -1,5 +1,5 @@
 from openai import OpenAI
-from Streamlit.secrets_manager import get_api_key
+from II.secrets_manager import get_api_key
 import json
 
 # gpt api key 불러오기

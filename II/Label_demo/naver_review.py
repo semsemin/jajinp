@@ -1,7 +1,7 @@
 import urllib.request
 import json
 import streamlit as st  # Streamlit 모듈을 가져옵니다.
-from Streamlit.secrets_manager import get_api_key
+from secrets_manager import get_api_key
 from openai import OpenAI
 
 client_id = get_api_key('CLIENT_ID')

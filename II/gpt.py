@@ -87,6 +87,47 @@ def get_product_data(image_path):
     print(predicted_json)
     return predicted_json
 
+# 책 정보 추출 함수
+def get_book_data(image_path):
+    base64_image = encode_image(image_path)
+
+    # OpenAI API 요청
+    client = OpenAI(api_key=gpt_key)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages = [
+            {"role": "system","content": "You are an assistant specialized in analyzing bookshelves and extracting book titles from images. Your task is to extract the titles of all books visible in the image. Use OCR to capture the text exactly as it appears on the book covers or spines, including unique spellings or formatting. Return the title in JSON format."},
+            {"role": "user","content": [
+                
+                {"type": "text", "text": "Based on this data, write the book titles in JSON format as [{'title': 'exact text from the book title'}]. For multiple books, return a list of objects, and ensure the unique formatting, spacing, and spelling are captured exactly as written."},
+                {"type": "image_url", "image_url": {
+                    "url": f"data:image/png;base64,{base64_image}"
+                }}
+            ]}
+        ],
+        temperature=0.0
+    )
+
+    response_content = response.choices[0].message.content
+    print("GPT 응답 원본:", response_content)
+
+    if response_content.startswith("```json"):
+        response_content = response_content[7:]  # ```json 제거
+    if response_content.endswith("```"):
+        response_content = response_content[:-3]  # ``` 제거
+
+    # 작은따옴표를 큰따옴표로 변환
+    response_content = response_content.replace("'", '"')
+
+    try:
+        predicted_json = json.loads(response_content)
+    except json.JSONDecodeError:
+        print("JSONDecodeError: 응답 내용을 JSON 형식으로 변환할 수 없습니다.")
+        predicted_json = {}  # 변환 실패 시 빈 딕셔너리 반환
+    
+    print(predicted_json)
+    return predicted_json
+
 # gpt로 이미지 글자 인식 함수
 def gpt_img(image_path):
     with open(image_path, "rb") as image_file:
@@ -96,6 +137,7 @@ def gpt_img(image_path):
     response = client.chat.completions.create(
     model ="gpt-4o",
         messages =[
+            
             {"role" : "system" , "content" :" You are an assistant specialized in extracting product names and prices from price tags. Please read the price tag and extract the product names and their corresponding prices."},
             {"role": "user", "content": [
             {"type": "text", "text": "Based on this data, please write the name and price in JSON format as {'product_name': 'product name', 'price': 'price'}. For multiple products, return a list of objects without '원' or '₩' in price, just the number."},

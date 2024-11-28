@@ -4,7 +4,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chat_models.openai import ChatOpenAI
 from langchain.utilities import GoogleSearchAPIWrapper
 import os
-from Streamlit.secrets_manager import get_api_key
+from II.secrets_manager import get_api_key
 
 os.environ["GOOGLE_CSE_ID"] = get_api_key('GOOGLE_CSE_ID')
 os.environ["GOOGLE_API_KEY"] = get_api_key('GOOGLE_API_KEY')

@@ -3,7 +3,7 @@ import time
 from openai import OpenAI
 import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from Streamlit.secrets_manager import get_api_key
+from II.secrets_manager import get_api_key
 
 
 gpt_key = get_api_key(api_name='GPT_API_KEY')
