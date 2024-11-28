@@ -1,7 +1,7 @@
 import requests
 import json
 import re
-from Streamlit.secrets_manager import get_api_key
+from II.secrets_manager import get_api_key
 
 # Streamlit secrets에서 API 키 가져오기
 client_id = get_api_key(api_name='CLIENT_ID')

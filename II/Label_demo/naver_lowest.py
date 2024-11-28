@@ -1,6 +1,6 @@
 import urllib.request
 import json
-from Streamlit.secrets_manager import get_api_key
+from secrets_manager import get_api_key
 
 def get_naver_api_credentials():
     client_id = get_api_key(api_name='CLIENT_ID')

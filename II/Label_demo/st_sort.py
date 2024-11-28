@@ -1,6 +1,9 @@
 import streamlit as st
-from product_data import fetch_online_product_data
-from naver_review import fetch_and_display_review_summary
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from Label_demo.product_data import fetch_online_product_data
+from Label_demo.naver_review import fetch_and_display_review_summary
 
 def display_sorted_products():
     """
