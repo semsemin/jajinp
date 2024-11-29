@@ -4,6 +4,7 @@ from datetime import datetime
 from PIL import Image
 
 def run_camera():
+    st.write("")
     st.subheader('카메라')
     enable = st.checkbox("enable camera")
     picture = st.camera_input("take a picture", disabled = not enable)
@@ -27,6 +28,7 @@ def run_camera():
     return 
 
 def upload_image():
+    st.write("")
     st.subheader('이미지 업로드')
     img_file = st.file_uploader ('이미지', type=['png','jpg', 'jpeg'])
 

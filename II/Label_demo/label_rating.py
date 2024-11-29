@@ -9,6 +9,8 @@ import os
 import json
 
 def get_reviews_and_ratings(product_data):
+    import os
+
     # Set environment variables
     os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
     os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
@@ -47,6 +49,21 @@ def get_reviews_and_ratings(product_data):
     # Tavily search setup
     web_search = TavilySearchResults(max_results=10)
 
+    # 최대 별점 추정 함수
+    def estimate_max_rating(rating):
+        if rating > 5:  # 별점이 5를 초과하면 10점 만점으로 간주
+            return 10
+        else:  # 그렇지 않으면 5점 만점으로 간주
+            return 5
+
+    # 숫자인지 확인하는 함수
+    def is_valid_number(value):
+        try:
+            float(value)
+            return True
+        except (ValueError, TypeError):
+            return False
+
     # Store results
     all_responses = {}
 
@@ -63,11 +80,20 @@ def get_reviews_and_ratings(product_data):
         # Run chain
         response = chain.invoke({'context': context, 'question': query})
 
+        # Extract rating and normalize
+        raw_rating = response.get('rating')
+        normalized_rating = 'N/A'
+
+        if is_valid_number(raw_rating):  # Check if raw_rating is a valid number
+            raw_rating = float(raw_rating)
+            max_rating = estimate_max_rating(raw_rating)
+            normalized_rating = (raw_rating / max_rating) * 5
+
         # Save results
         all_responses[product['product_name']] = {
             'product_name': product['product_name'],
             'review_count': response.get('review_count', 'N/A'),
-            'rating': response.get('rating', 'N/A')
+            'rating': normalized_rating
         }
 
     return all_responses
