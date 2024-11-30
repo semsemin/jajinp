@@ -30,7 +30,7 @@ def run_camera():
 def upload_image():
     st.write("")
     st.subheader('이미지 업로드')
-    img_file = st.file_uploader ('이미지', type=['png','jpg', 'jpeg'])
+    img_file = st.file_uploader ('', type=['png','jpg', 'jpeg'])
 
     if img_file is not None : 
         current_time = datetime.now()

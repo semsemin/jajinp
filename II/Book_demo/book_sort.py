@@ -10,6 +10,7 @@ from Book_demo.book_data import fetch_book_data
 from Book_demo.book_summary import get_book_summaries_and_recommendations
 
 
+
 def display_sorted_books():
     """
     Streamlit에서 리뷰 수, 평점, 베스트셀러 순위를 기준으로 정렬된 표와,
@@ -17,13 +18,32 @@ def display_sorted_books():
     """
 
     # 현재 입력된 book_data
-    book_data = st.session_state["title"]
+    book_data = st.session_state.get("title", [])
+    if not book_data:
+        st.error("책 데이터가 없습니다. 먼저 데이터를 로드하세요.")
+        return
 
     # 데이터 정제: NoneType 또는 "N/A" 값을 기본값으로 대체
     for book in book_data:
-        book["review_count"] = int(book["review_count"]) if book["review_count"] and book["review_count"] != "N/A" else 0
-        book["rating"] = float(book["rating"]) if book["rating"] and book["rating"] != "N/A" else 0.0
-        book["bestseller_rank"] = 0  # 베스트셀러 순위는 현재 없으므로 0으로 설정
+        try:
+            book["review_count"] = int(book.get("review_count", 0))  # 기본값 0
+        except ValueError:
+            book["review_count"] = 0
+
+        try:
+            book["rating"] = float(book.get("rating", 0.0))  # 기본값 0.0
+        except ValueError:
+            book["rating"] = 0.0
+
+        # 베스트셀러 순위 처리
+        best_seller = book.get("best_seller", None)
+        if best_seller is None or best_seller == "N/A":
+            book["best_seller"] = 99999  # 매우 낮은 우선순위를 의미하는 큰 값
+        else:
+            try:
+                book["best_seller"] = int(best_seller)
+            except ValueError:
+                book["best_seller"] = 99999  # 정수 변환 실패 시 기본값
 
     # DataFrame 생성
     book_df = pd.DataFrame(book_data)
@@ -61,14 +81,13 @@ def display_sorted_books():
 
     with tab3:
         st.subheader("베스트셀러 순위")
-        sorted_df = book_df.sort_values(by="bestseller_rank", ascending=True).reset_index(drop=True)
+        sorted_df = book_df.sort_values(by="best_seller", ascending=True).reset_index(drop=True)
         st.dataframe(
-            sorted_df.style.apply(highlight_column, column_name="bestseller_rank", axis=None),
+            sorted_df.style.apply(highlight_column, column_name="best_seller", axis=None),
             use_container_width=True,
         )
-
-    # 두 번째 표: 줄거리와 추천 정보 표시
-    st.subheader("줄거리와 추천")
+        
+    st.subheader("줄거리와 추천 독자")
 
     detailed_info_data = []
     for book in book_data:
@@ -89,3 +108,5 @@ def display_sorted_books():
 
     detailed_info_df = pd.DataFrame(detailed_info_data)
     st.table(detailed_info_df)
+
+    

@@ -2,12 +2,9 @@ import json
 from Book_demo.book_rating import get_book_ratings_and_reviews
 import os
 import sys
-
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if project_root not in sys.path:
     sys.path.append(project_root)
-
-
 
 def fetch_book_data(book_titles):
     """
@@ -24,26 +21,34 @@ def fetch_book_data(book_titles):
 
     # 결과 데이터 생성
     online_data = []
-    for book in book_ratings:
-        # 문자열인 경우 JSON 포맷팅 제거 후 파싱
-        if isinstance(book, str):
-            try:
-                # ```json과 \n 제거
-                book = book.replace("```json", "").replace("```", "").strip()
-                book = json.loads(book)
-            except json.JSONDecodeError:
-                book = {"title": "N/A", "review_count": "N/A", "rating": "N/A"}
-
+    for title, book_info in book_ratings.items():
         # 데이터 추출
-        title = book.get('title', 'N/A')
-        review_count = book.get('review_count', 'N/A')
-        rating = book.get('rating', 'N/A')
+        title = book_info.get('title', 'N/A')
+        
+        # review_count 처리
+        raw_review_count = book_info.get('review_count', None)
+        if raw_review_count is None or not isinstance(raw_review_count, (int, float, str)):
+            review_count = 0
+        else:
+            try:
+                review_count = int(raw_review_count)  # 숫자로 변환
+            except ValueError:
+                review_count = 0  # 변환 실패 시 기본값
+
+        # rating 처리
+        raw_rating = book_info.get('rating', 'N/A')
+        rating = raw_rating if isinstance(raw_rating, (int, float)) else 'N/A'
+
+        # best_seller 처리
+        best_seller = book_info.get('best_seller', 'N/A')
 
         # 결과 리스트에 추가
         online_data.append({
             "title": title,
             "review_count": review_count,
-            "rating": rating
+            "rating": rating,
+            "best_seller": best_seller
         })
+        print(online_data)  # 디버깅용 출력
 
     return online_data
