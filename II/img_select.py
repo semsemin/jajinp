@@ -2,10 +2,11 @@ import streamlit as st
 from PIL import Image
 import bring_img
 import gpt
+from Label_demo.recommand_algo import calculate_similarity_recommendations
+from Label_demo.recommand_algo import calculate_recommendation_scores
 from Label_demo.product_data import fetch_online_product_data
 from Label_demo.st_sort import display_sorted_products  # st_sort.py에서 display_sorted_products 가져오기
 from img_crop import crop_and_save_image  # 이미지 크롭 및 저장 기능
-from Label_demo.recommand_algo import generate_content_based_recommendations  # recommand_algo.py에서 추천 알고리즘 함수 가져오기
 from Label_demo.display_total_recommendation import display_recommendations  # display_total_recommendation.py에서 결과 출력 함수 가져오기
 from Ganpan_demo.menu_recom import recommend_best_menus
 from Book_demo.book_data import fetch_book_data 
@@ -15,20 +16,13 @@ from Book_demo.book_display import book_display_recommendations
 import time  
 import pandas as pd
 
-def img_select(task_type):
-    st.title("ItemInsight")
 
+def img_select(task_type):
     if task_type == 'label':
+        st.title("상품 추천 서비스")
         # CSS 스타일 추가
         st.markdown("""
             <style>
-            .service-title {
-            line-height: 1.5; 
-            font-size: 20px; 
-            font-weight: bold;
-            color: #4A90E2;
-            margin-bottom: 10px;
-            }
             .instruction-box {
             line-height: 1.5; 
             font-size: 16px; 
@@ -52,9 +46,6 @@ def img_select(task_type):
 
         # 서비스 제목 및 설명
         st.markdown("""
-            <div class="service-title">
-            상품 추천 서비스
-            </div>
             <div class="instruction-box">
             상품 라벨을 촬영하거나 업로드하면, <br>
             해당 상품의 이름과 가격을 인식하여 상품을 추천해드립니다.
@@ -85,16 +76,10 @@ def img_select(task_type):
             cropped_image_path = crop_and_save_image(image_path)
 
     elif task_type == 'ganpan':
+        st.title("메뉴 추천 서비스")
         # CSS 스타일 추가
         st.markdown("""
             <style>
-            .service-title {
-            line-height: 1.5; 
-            font-size: 20px; 
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            }
             .instruction-box {
             line-height: 1.5; 
             font-size: 16px; 
@@ -118,9 +103,6 @@ def img_select(task_type):
 
         # 서비스 제목 및 설명
         st.markdown("""
-            <div class="service-title">
-            메뉴 추천 서비스
-            </div>
             <div class="instruction-box">
             매장 간판을 촬영하거나 업로드하면, <br>
             해당 가게의 이름과 지점을 인식하여 추천 메뉴를 제공합니다.
@@ -151,16 +133,11 @@ def img_select(task_type):
             cropped_image_path = crop_and_save_image(image_path)
 
     elif task_type == 'book':
+        st.title("책 추천 서비스")
                # CSS 스타일 추가
         st.markdown("""
             <style>
-            .service-title {
-            line-height: 1.5; 
-            font-size: 20px; 
-            font-weight: bold;
-            color:  #9ACD32;
-            margin-bottom: 10px;
-            }
+                    
             .instruction-box {
             line-height: 1.5; 
             font-size: 16px; 
@@ -184,9 +161,6 @@ def img_select(task_type):
 
         # 서비스 제목 및 설명
         st.markdown("""
-            <div class="service-title">
-            책 추천 서비스
-            </div>
             <div class="instruction-box">
             책 제목을 촬영하거나 업로드하면, <br>
             책의 줄거리와 정보를 바탕으로 책을 추천해드립니다.
@@ -222,50 +196,35 @@ def img_select(task_type):
         if st.button("크롭된 이미지 사용하기"):
             if task_type == 'label':
                 result = gpt.get_gpt_response(cropped_image_path)
-                st.write("GPT에서 추출한 데이터 :")
+                st.write("🏷️ AI가 라벨에서 추출한 상품명과 가격 정보:")
                 st.json(result)
-                
+
                 if result:
-                    # 로딩 중 컴포넌트 시작
-                    latest_iteration = st.empty()
-                    progress_bar = st.progress(0)
+                # 로딩 메시지를 표시하면서 데이터 처리
+                    with st.spinner("상품 리뷰, 평점, 최저가를 분석 중입니다. 잠시만 기다려 주세요!"):
 
-                    # 데이터 처리 중 로딩 상태 표시
-                    for i in range(50):
-                        latest_iteration.text(f"Loading data... {i}%")
-                        progress_bar.progress(i)
-                        
-                        time.sleep(0.02)  # 로딩 속도 조정 가능
+                        # "product name" 키를 사용해 product_data 생성
+                        product_data = [{"product_name": item["product_name"]} for item in result]
 
-                    # "product name" 키를 사용해 product_data 생성
-                    product_data = [{"product_name": item["product_name"]} for item in result]
-
-                    # 상세 데이터 가져오기
-                    detailed_data = fetch_online_product_data(product_data)
-                    
-                    # 정렬 및 표시를 위해 session_state에 저장
-                    st.session_state["product_data"] = detailed_data
-                    local_data = result
-
-                    # 로딩 완료 상태 표시
-                    for i in range(30, 101):
-                        latest_iteration.text(f"Processing data... {i}%")
-                        progress_bar.progress(i)
-                        time.sleep(0.02)
-
-                    # 로딩 컴포넌트 제거
-                    latest_iteration.empty()
-                    progress_bar.empty()
+                        # 상세 데이터 가져오기
+                        detailed_data = fetch_online_product_data(product_data)
+        
+                        # 정렬 및 표시를 위해 session_state에 저장
+                        st.session_state["product_data"] = detailed_data
+                        local_data = result
 
                     # display_sorted_products 호출
                     display_sorted_products()
-                    recommendation_df, recommendations = generate_content_based_recommendations(local_data, detailed_data)
-                    display_recommendations(recommendation_df, recommendations)
+                    # Step 1: 추천 점수 계산
+                    df, recommendations_list = calculate_recommendation_scores(local_data, detailed_data)  # 분리된 반환값 사용
+                    # Step 2: 유사도 기반 추천 계산
+                    similarity_recommendations = calculate_similarity_recommendations(df)
+                    display_recommendations(df,recommendations_list, similarity_recommendations)
 
                 
             elif task_type == 'ganpan':
                 result = gpt.get_product_data(cropped_image_path)
-                st.write("GPT에서 추출한 데이터 :")
+                st.write("📍 AI가 간판에서 추출한 매장 정보 (상호명 & 지점):")
                 st.json(result)
                 best_menu = recommend_best_menus(result)
                 st.write("베스트 메뉴 추천 :")
@@ -279,38 +238,24 @@ def img_select(task_type):
 
             elif task_type == 'book':
                 result = gpt.get_book_data(cropped_image_path)
-                st.write("GPT에서 추출한 데이터 :")
+                st.write("📖 AI가 책에서 추출한 제목:")
                 st.json(result)
-                # 로딩 중 컴포넌트 시작
-                latest_iteration = st.empty()
-                progress_bar = st.progress(0)
-
-                # 데이터 처리 중 로딩 상태 표시
-                for i in range(30):
-                    latest_iteration.text(f"Loading data... {i}%")
-                    progress_bar.progress(i)
-                        
-                    time.sleep(0.02)  # 로딩 속도 조정 가능
                 if result:
-                    # "product name" 키를 사용해 product_data 생성
+                # "product name" 키를 사용해 product_data 생성
                     title_data = [{"title": item["title"]} for item in result]
 
-                    book_data = fetch_book_data(title_data) 
+                    with st.spinner("책의 리뷰 수, 베스트셀러 순위, 평점을 분석 중입니다. 잠시만 기다려 주세요!"):
+                    # 책 데이터를 가져오는 동안 로딩 상태 표시
+                        book_data = fetch_book_data(title_data)
 
-                    # 정렬 및 표시를 위해 session_state에 저장
-                    st.session_state["title"] = book_data
-                    local_data = result
+                        # 정렬 및 표시를 위해 session_state에 저장
+                        st.session_state["title"] = book_data
+                        local_data = result
 
-                    # 로딩 완료 상태 표시
-                    for i in range(30, 101):
-                        latest_iteration.text(f"Processing data... {i}%")
-                        progress_bar.progress(i)
-                        time.sleep(0.02)
-                    # 로딩 컴포넌트 제거
-                    latest_iteration.empty()
-                    progress_bar.empty()
-
-                    # display_sorted_products 호출
+                    # display_sorted_books 호출
                     display_sorted_books()
+
+                    # 리스트를 딕셔너리로 변환
+                    book_data = {item["title"]: item for item in book_data}
                     recommendation_df, recommendations = process_book_data(book_data)
                     book_display_recommendations(recommendation_df, recommendations)

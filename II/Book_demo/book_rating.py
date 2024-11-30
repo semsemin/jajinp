@@ -11,6 +11,7 @@ from secrets_manager import get_api_key
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.runnable import RunnablePassthrough
+import json
 
 def get_book_ratings_and_reviews(input_data):
     """
@@ -41,24 +42,41 @@ def get_book_ratings_and_reviews(input_data):
     )
 
     # Prompt 정의
-    template = '''    
+
+    template = '''
         ("system", "당신은 책의 리뷰와 별점 정보를 제공하는 AI입니다. 아래의 컨텍스트를 바탕으로 질문에 답변하세요. "
-        "응답은 JSON 형식으로 작성하며, 키는 'title', 'rating', 'review_count'입니다. "
-        "'title'은 책 제목, 'rating'은 별점, 'review_count'는 리뷰 수입니다."
-        ""),
+        "응답은 항상 JSON 형식으로 작성하며, 키는 'title', 'rating', 'review_count', 'best_seller'입니다. "
+        "'title'은 책 제목,'rating'은 별점, 'review_count'는 리뷰 수, 'best_seller'는 베스트셀러 순위입니다."
+        ),
         ("human", "컨텍스트: {context}\n\n질문: {question}")
     '''
+
     prompt = ChatPromptTemplate.from_template(template)
 
     def format_docs(docs):
         return '\n\n'.join([d.page_content for d in docs])
+    
+     # 최대 별점 추정 함수
+    def estimate_max_rating(rating):
+        if rating > 5:  # 별점이 5를 초과하면 10점 만점으로 간주
+            return 10
+        else:  # 그렇지 않으면 5점 만점으로 간주
+            return 5
+
+    # 숫자인지 확인하는 함수
+    def is_valid_number(value):
+        try:
+            float(value)
+            return True
+        except (ValueError, TypeError):
+            return False
 
     # 결과 저장
-    all_responses = []
+    all_responses = {}
 
     # 입력 데이터 처리
     for book_title in input_data:
-        query = f"{book_title['title']} 책의 별점과 리뷰 수를 검색해서 알려줘."
+        query = f"{book_title['title']} 책의 별점과 리뷰 수, 그리고 교보문고 기준 베스트셀러 순위를 검색해서 알려줘."
 
         # Tavily 검색 수행
         web_search = TavilySearchResults(max_results=10)
@@ -111,6 +129,49 @@ def get_book_ratings_and_reviews(input_data):
 
         # Chain 실행
         response = chain.invoke(query)
-        all_responses.append(response)
+
+        # 디버깅: response 출력
+        print("Raw response:", response)
+
+        # JSON 문자열을 딕셔너리로 변환
+        if isinstance(response, str):
+            try:
+                response = json.loads(response.replace("```json", "").replace("```", "").strip())
+            except json.JSONDecodeError:
+            # 기본값 설정
+                response = {
+                    "title": book_title['title'],
+                    "rating": "N/A",
+                    "review_count": "N/A",
+                    "best_seller": "N/A"
+                }
+        # 디버깅: JSON 변환 후 response 확인
+        print("Parsed response:", response)     
+
+        # Extract rating and normalize
+        raw_rating = response.get('rating')
+        normalized_rating = 'N/A'
+
+        # 디버깅: raw_rating 값 확인
+        print("Raw rating:", raw_rating)
+
+        if is_valid_number(raw_rating):  # Check if raw_rating is a valid number
+            raw_rating = float(raw_rating)
+            max_rating = estimate_max_rating(raw_rating)
+            normalized_rating = (raw_rating / max_rating) * 5
+
+        # 디버깅: normalized_rating 값 확인
+        print("Normalized rating:", normalized_rating)
+
+
+        # Save results
+        all_responses[book_title['title']] = {
+            'title': book_title['title'],
+            'review_count': response.get('review_count', 'N/A'),
+            'rating': normalized_rating,
+            'best_seller' : response.get('best_seller', 'N/A')
+        }
+        # 디버깅: 최종 저장 데이터 확인
+        print("All responses:", all_responses)
 
     return all_responses

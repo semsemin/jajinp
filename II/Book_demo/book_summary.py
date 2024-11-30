@@ -142,3 +142,4 @@ def get_book_summaries_and_recommendations(input_data):
         all_responses.append(response)
 
     return all_responses
+
