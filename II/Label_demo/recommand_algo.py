@@ -100,7 +100,7 @@ def calculate_recommendation_scores(local_data, online_data):
 
 def generate_gpt_embeddings(product_names):
     """
-    GPT를 사용하여 상품 이름의 임베딩 벡터를 생성.
+    LangChain의 OpenAIEmbeddings를 사용하여 상품 이름의 임베딩 벡터를 생성.
 
     Args:
         product_names (list of str): 상품 이름 리스트.
@@ -108,17 +108,17 @@ def generate_gpt_embeddings(product_names):
     Returns:
         list of list: GPT 기반 임베딩 벡터 리스트.
     """
+    embeddings_model = OpenAIEmbeddings(model="text-embedding-ada-002")  # LangChain Embeddings
     embeddings = []
+    
     for name in product_names:
         try:
-            response = openai.Embedding.create(
-                input=name,
-                model="text-embedding-ada-002"  # GPT 임베딩 모델
-            )
-            embeddings.append(response['data'][0]['embedding'])
+            embedding = embeddings_model.embed_query(name)  # 상품명으로 임베딩 생성
+            embeddings.append(embedding)
         except Exception as e:
             print(f"Error generating embedding for '{name}': {e}")
             embeddings.append([0] * 1536)  # 기본 임베딩 벡터로 대체
+    
     return embeddings
 
 
@@ -134,11 +134,11 @@ def calculate_similarity_recommendations(df):
         list of dict: 각 상품과 유사한 상품 추천 리스트.
     """
     # 상품 이름과 추천 점수를 포함하여 결합된 텍스트 생성
-    df['combined_features'] = df['product_name']
+    df['combined_features'] = df['product_name'] + df['recommend_score'].astype(str)
 
     # Step 1: TF-IDF 유사도 계산
     tfidf_vectorizer = TfidfVectorizer()
-    tfidf_matrix = tfidf_vectorizer.fit_transform(df['combined_features'])
+    tfidf_matrix = tfidf_vectorizer.fit_transform(df['product_name'])
     tfidf_similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
     # Step 2: 추천 점수 기반 추가 유사도 행렬 계산
@@ -147,15 +147,15 @@ def calculate_similarity_recommendations(df):
     )
 
     # Step 3: GPT 임베딩 유사도 계산
-    product_names = df['product_name'].tolist()
-    gpt_embeddings = generate_gpt_embeddings(product_names)  # GPT 임베딩 생성
+    combined_features = df['combined_features'].tolist()
+    gpt_embeddings = generate_gpt_embeddings(combined_features)  # GPT 임베딩 생성
     gpt_similarity_matrix = cosine_similarity(gpt_embeddings, gpt_embeddings)
 
     # Step 4: 유사도 행렬 결합 (TF-IDF, 추천 점수, GPT 기반 유사도)
     combined_similarity_matrix = (
-        0.3 * tfidf_similarity_matrix +  # TF-IDF 유사도에 30% 가중치
-        0.4 * score_similarity_matrix +  # 추천 점수 유사도에 40% 가중치
-        0.3 * gpt_similarity_matrix     # GPT 임베딩 유사도에 30% 가중치
+        0.2 * tfidf_similarity_matrix +  
+        0.3 * score_similarity_matrix +  
+        0.5 * gpt_similarity_matrix     
     )
 
     # Step 5: 유사 상품 추천 생성
