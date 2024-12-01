@@ -9,42 +9,19 @@ from Book_demo.book_rating import get_book_ratings_and_reviews
 from Book_demo.book_data import fetch_book_data
 from Book_demo.book_summary import get_book_summaries_and_recommendations
 
-def highlight_column(df, column_name):
-    """
-    특정 열(column_name)을 강조하는 스타일링 함수
-    """
-    pastel_green = "background-color: #d5f5e3;"  # 강조할 배경색
-    styles = pd.DataFrame("", index=df.index, columns=df.columns)
-    styles[column_name] = pastel_green  # 특정 열에만 스타일 적용
-    return styles
-
-
-def display_tab(tab, book_df, sort_by, ascending, highlight_col):
-    """
-    탭별 데이터 정렬 및 출력 함수
-    """
-    with tab:
-        sorted_df = book_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
-        sorted_df.index = sorted_df.index + 1  # 순위 설정
-        sorted_df.index.name = "순위"  # 인덱스 열 이름 설정
-        st.dataframe(
-            sorted_df.style.apply(highlight_column, column_name=highlight_col, axis=None),
-            use_container_width=True,
-        )
-
-
 def display_sorted_books():
     """
     Streamlit에서 리뷰 수, 평점, 베스트셀러 순위를 기준으로 정렬된 표와,
     줄거리 및 추천 정보를 표시하는 표를 구현
     """
+
     # 현재 입력된 book_data
     book_data = st.session_state.get("title", [])
     if not book_data:
         st.error("책 데이터가 없습니다. 먼저 데이터를 로드하세요.")
         return
-
-    # 데이터 정제
+    
+    # 데이터 정제: NoneType 또는 "N/A" 값을 기본값으로 대체
     for book in book_data:
         # 리뷰 수 정제
         try:
@@ -89,13 +66,50 @@ def display_sorted_books():
     # 첫 번째 표: 리뷰 수, 평점, 베스트셀러 순위를 기준으로 정렬 및 강조
     st.markdown("<h5>리뷰 수 / 평점 / 베스트셀러 순위</h5>", unsafe_allow_html=True)
 
-    # Streamlit 탭 생성
     tab1, tab2, tab3 = st.tabs(["리뷰 수", "평점", "베스트셀러 순위"])
 
-    # 탭별 데이터 정렬 및 출력
-    display_tab(tab1, book_df, sort_by="리뷰 수", ascending=False, highlight_col="리뷰 수")
-    display_tab(tab2, book_df, sort_by="평점", ascending=False, highlight_col="평점")
-    display_tab(tab3, book_df, sort_by="베스트셀러 순위", ascending=True, highlight_col="베스트셀러 순위")
+    def highlight_column(df, column_name):
+        """
+        특정 열(column_name)을 강조하는 스타일링 함수
+        """
+        pastel_green = "background-color: #d5f5e3;"  # 강조할 배경색
+        styles = pd.DataFrame("", index=df.index, columns=df.columns)
+        styles[column_name] = pastel_green  # 특정 열에만 스타일 적용
+        return styles
+
+    # 각 탭의 내용
+    with tab1:
+        sorted_df = book_df.sort_values(by="리뷰 수", ascending=False).reset_index(drop=True)
+        sorted_df.index = sorted_df.index + 1  # 순위 설정
+        sorted_df.index.name = "순위"  # 인덱스 열 이름 설정
+        st.dataframe(
+            sorted_df.style.format(
+                {"베스트셀러 순위": lambda x: "순위 밖" if x == 99999 else f"{x}"}
+            ).apply(highlight_column, column_name="리뷰 수", axis=None),
+            use_container_width=True,
+        )
+
+    with tab2:
+        sorted_df = book_df.sort_values(by="평점", ascending=False).reset_index(drop=True)
+        sorted_df.index = sorted_df.index + 1  # 순위 설정
+        sorted_df.index.name = "순위"  # 인덱스 열 이름 설정
+        st.dataframe(
+            sorted_df.style.format(
+                {"베스트셀러 순위": lambda x: "순위 밖" if x == 99999 else f"{x}"}
+            ).apply(highlight_column, column_name="평점", axis=None),
+            use_container_width=True,
+        )
+
+    with tab3:
+        sorted_df = book_df.sort_values(by="베스트셀러 순위", ascending=True).reset_index(drop=True)
+        sorted_df.index = sorted_df.index + 1  # 순위 설정
+        sorted_df.index.name = "순위"  # 인덱스 열 이름 설정
+        st.dataframe(
+            sorted_df.style.format(
+                {"베스트셀러 순위": lambda x: "순위 밖" if x == 99999 else f"{x}"}
+            ).apply(highlight_column, column_name="베스트셀러 순위", axis=None),
+            use_container_width=True,
+        )
 
 
 def get_detailed_info(book_data):
@@ -103,8 +117,8 @@ def get_detailed_info(book_data):
     책의 줄거리와 추천 독자 정보를 가져오는 함수
     """
     st.subheader("🌟 줄거리와 추천 독자")
-    
     detailed_info_data = []
+
     for book in book_data:
         with st.spinner(f"'{book['title']}'의 줄거리와 추천 독자 정보를 가져오는 중..."):
             summary_data = get_book_summaries_and_recommendations([{"title": book["title"]}])
@@ -120,4 +134,12 @@ def get_detailed_info(book_data):
                 "줄거리 요약": summary,
                 "추천 독자": recommended_for
             })
-    return pd.DataFrame(detailed_info_data)
+
+    # DataFrame 생성
+    df = pd.DataFrame(detailed_info_data)
+
+    # 인덱스를 1부터 시작하도록 설정
+    df.index = range(1, len(df) + 1)
+    df.index.name = "순위"
+
+    return df

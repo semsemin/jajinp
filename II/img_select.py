@@ -233,6 +233,8 @@ def img_select(task_type):
                     # "best_menus" 리스트를 DataFrame으로 변환
                     # 열 이름 변경
                     df = pd.DataFrame(best_menu["best_menus"], columns=["name", "description"])
+                    df.index = df.index + 1  # 인덱스를 1부터 시작
+                    df.index.name = "순위" 
                     df.rename(
                         columns={
                             "name": "메뉴명",

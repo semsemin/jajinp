@@ -72,6 +72,9 @@ def display_sorted_products():
         inplace=True
     )
 
+    # 평점 소수점 첫째 자리까지만 표시
+    product_df["평점"] = product_df["평점"].map(lambda x: f"{x:.1f}")
+    
     # Streamlit 탭 생성
     st.markdown("<h5>리뷰 수 / 평점 / 최저가 </h5>", unsafe_allow_html=True)
     tab1, tab2, tab3 = st.tabs(["리뷰수", "평점", "최저가"])

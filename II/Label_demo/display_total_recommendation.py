@@ -46,8 +46,23 @@ def display_recommendations(df, recommendations, similar):
     # 유사 상품 추천 출력
     st.subheader("🌟 유사 상품 추천")
     st.write('<small>유사도는 상품명과 추천 점수의 유사성을 기준으로 산출되었습니다.</small>', unsafe_allow_html=True)
+
     for rec in similar:
-        st.write(f"**상품명:** {rec['product_name']}")
-        st.write("유사 상품:")
-        for similar_item, score in rec['recommendations']:
-            st.write(f"- {similar_item} (유사도: {score:.2f})")
+        # 상품명 출력
+        st.write(f"- {rec['product_name']}")
+
+        # 유사 상품 데이터를 DataFrame으로 변환
+        df = pd.DataFrame(
+            rec['recommendations'],
+            columns=["유사 상품명", "유사도"]
+        )
+
+        # 유사도를 소수점 2자리로 포맷팅
+        df["유사도"] = df["유사도"].map("{:.2f}".format)
+
+        # 순위 설정: index를 순위로
+        df.index = df.index + 1
+        df.index.name = "순위"
+
+        # 표로 출력
+        st.table(df)
