@@ -49,7 +49,7 @@ def display_sorted_products():
 
     # 데이터 정제
     for product in product_data:
-        product["review_count"] = int(product.get("review_count", 0))  # 기본값 0
+        product["review_count"] = int(product.get("review_count", 0) or 0)
         product["online_price"] = (
             int(product["online_price"]) if product.get("online_price") not in [None, "N/A"] else float("inf")
         )
