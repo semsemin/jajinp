@@ -2,84 +2,81 @@ import streamlit as st
 import pandas as pd
 import sys
 import os
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from Label_demo.product_data import fetch_online_product_data
 from Label_demo.naver_review import fetch_and_display_review_summary
 
 
-# Streamlit 탭에서 데이터 표시
+def highlight_column(df, column_name):
+    """
+    특정 열(column_name)을 강조하는 스타일링 함수
+    """
+    highlight_color = "background-color: #e6f3fc;"  # 강조할 배경색
+    styles = pd.DataFrame("", index=df.index, columns=df.columns)  # 기본 스타일은 빈 문자열
+    if column_name in df.columns:
+        styles[column_name] = highlight_color  # 지정된 열에만 스타일 적용
+    return styles
+
+
+def display_tab(tab, product_df, sort_by, ascending, highlight_col):
+    """
+    탭별 데이터 정렬 및 출력 함수
+    """
+    with tab:
+        # 정렬
+        sorted_df = product_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
+        
+        # 순위 설정
+        sorted_df.index = sorted_df.index + 1
+        sorted_df.index.name = "순위"
+
+        # Streamlit에 출력
+        st.dataframe(
+            sorted_df.style.apply(highlight_column, column_name=highlight_col, axis=None),
+            use_container_width=True,
+        )
+
+
 def display_sorted_products():
-    # 샘플 데이터
-    product_data = st.session_state["product_data"]
+    """
+    Streamlit에서 리뷰 수, 최저가, 평점을 기준으로 정렬된 데이터를 표시하며,
+    선택된 열을 강조하는 함수
+    """
+    # 현재 입력된 product_data
+    product_data = st.session_state.get("product_data", [])
+    if not product_data:
+        st.error("상품 데이터가 없습니다. 데이터를 먼저 로드하세요.")
+        return
 
-    # 데이터 정제: None 값과 타입 처리
+    # 데이터 정제
     for product in product_data:
-        # 리뷰 수와 가격 기본값 설정
-        product["review_count"] = product.get("review_count", 0) or 0
-        product["online_price"] = product.get("online_price", float("inf")) or float("inf")    
-
-        # 평점 타입 변환 및 기본값 설정
-        rating = product.get("rating", 0.0)
-        if isinstance(rating, str):  # 문자열인 경우 float으로 변환 시도
-            try:
-                rating = float(rating)
-            except ValueError:
-                rating = 0.0
-        product["rating"] = rating  # 변환된 값을 다시 할당
-
-        # 리뷰 요약 기본값 설정
-        product["review_summary"] = product.get("review_summary", "요약 없음")
-        # 리뷰 한줄평 추가
-    for product in product_data:
+        product["review_count"] = int(product.get("review_count", 0))  # 기본값 0
+        product["online_price"] = (
+            int(product["online_price"]) if product.get("online_price") not in [None, "N/A"] else float("inf")
+        )
+        try:
+            product["rating"] = float(product.get("rating", 0.0))  # 기본값 0.0
+        except (ValueError, TypeError):
+            product["rating"] = 0.0
         product["review_summary"] = fetch_and_display_review_summary(product["product_name"])
 
-    # 데이터 정렬
-    sorted_by_reviews = sorted(product_data, key=lambda x: x["review_count"], reverse=True)
-    sorted_by_price = sorted(product_data, key=lambda x: x["online_price"])
-    sorted_by_rating = sorted(product_data, key=lambda x: x["rating"], reverse=True)
+    # DataFrame 생성 및 열 이름 변경
+    product_df = pd.DataFrame(product_data)
+    product_df.rename(
+        columns={
+            "product_name": "상품명",
+            "review_count": "리뷰수",
+            "rating": "평점",
+            "online_price": "온라인 최저가",
+            "review_summary": "한줄평"
+        },
+        inplace=True
+    )
 
     # Streamlit 탭 생성
-    tab1, tab2, tab3 = st.tabs(["리뷰순", "최저가순", "평점순"])
+    st.markdown("<h5>리뷰 수 / 평점 / 최저가 </h5>", unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["리뷰수", "평점", "최저가"])
 
-    # 탭 별로 테이블 표시
-    for tab, sorted_products, columns, highlight_field in zip(
-        [tab1, tab2, tab3],
-        [sorted_by_reviews, sorted_by_price, sorted_by_rating],
-        [
-            ["순위", "제품명", "리뷰수", "한줄평"],
-            ["순위", "제품명", "최저가", "한줄평"],
-            ["순위", "제품명", "평점", "한줄평"],
-        ],
-        ["리뷰수", "최저가", "평점"],
-    ):
-        with tab:
-            # 데이터프레임 생성
-            table_data = [
-                {
-                    "순위": idx + 1,
-                    "제품명": product["product_name"],
-                    "리뷰수": product["review_count"] if "리뷰수" in columns else None,
-                    "최저가": product["online_price"] if "최저가" in columns else None,
-                    "평점": product["rating"] if "평점" in columns else None,
-                    "한줄평": product["review_summary"],
-                }
-                for idx, product in enumerate(sorted_products)
-            ]
-
-            df = pd.DataFrame(table_data)
-
-            # 선택된 기준만 표시
-            df = df[[col for col in columns if col in df.columns]]
-
-            # 열 강조를 위한 스타일링 함수
-            def highlight_column(data, column):
-                styles = pd.DataFrame("", index=data.index, columns=data.columns)
-                styles[column] = "background-color: #4A90E2; color: white;"  # 파란색 배경, 흰색 글씨
-                return styles
-
-            # 스타일 적용
-            styled_df = df.style.apply(lambda x: highlight_column(df, highlight_field), axis=None)
-
-            # Streamlit에 HTML로 렌더링
-            st.markdown(styled_df.to_html(index=False), unsafe_allow_html=True)
+    # 탭별 데이터 정렬 및 출력
+    display_tab(tab1, product_df, sort_by="리뷰수", ascending=False, highlight_col="리뷰수")
+    display_tab(tab2, product_df, sort_by="평점", ascending=False, highlight_col="평점")
+    display_tab(tab3, product_df, sort_by="온라인 최저가", ascending=True, highlight_col="온라인 최저가")

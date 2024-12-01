@@ -95,32 +95,3 @@ def process_book_data(all_responses):
     recommendations = df[['title','recommend_score']].to_dict(orient='records')
 
     return df, recommendations
-
-all_responses = {
-    "Book A": {
-        "title": "Book A",
-        "review_count": 1000,
-        "rating": 4.5,
-        "best_seller": 15  # 베스트셀러 순위 (1위일수록 높은 순위)
-    },
-    "Book B": {
-        "title": "Book B",
-        "review_count": 800,
-        "rating": 4.8,
-        "best_seller": 1  # 베스트셀러 1위
-    },
-    "Book C": {
-        "title": "Book C",
-        "review_count": 500,
-        "rating": 4.2,
-        "best_seller": 10  # 베스트셀러 10위
-    },
-    "Book D": {
-        "title": "Book D",
-        "review_count": 300,
-        "rating": 3.9,
-        "best_seller": 25  # 베스트셀러 순위 미달
-    }
-}
-pd.set_option('display.max_columns', None)
-print(process_book_data(all_responses))

@@ -173,37 +173,3 @@ def calculate_similarity_recommendations(df):
         })
 
     return recommendations
-
-
-
-
-# Local and Online data 예시
-local_data = [
-    {"product_name": "Product A", "price": 100},
-    {"product_name": "Product B", "price": 150}
-]
-
-online_data = [
-    {"product_name": "Product A", "review_count": 500, "rating": 4.5, "online_price": 90},
-    {"product_name": "Product B", "review_count": 300, "rating": 4.3, "online_price": 140}
-]
-
-# Step 1: 추천 점수 계산
-df, recommendations_list = calculate_recommendation_scores(local_data, online_data)  # 분리된 반환값 사용
-print ("df = ", df)
-print ("rl = ", recommendations_list)
-
-# Step 2: 유사도 기반 추천 계산
-similarity_recommendations = calculate_similarity_recommendations(df)
-
-# 결과 출력
-print("추천 점수 데이터프레임:")
-pd.set_option('display.max_columns', None)
-print(df)
-
-print("\n추천 점수 리스트:")
-pd.set_option('display.max_columns', None)
-print(recommendations_list)
-
-print("\n유사도 기반 추천:")
-print(similarity_recommendations)

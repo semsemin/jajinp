@@ -28,6 +28,8 @@ def fetch_online_product_data(product_data):
         review_rating_data = get_reviews_and_ratings([{"product_name": product_name}])
         review_count = review_rating_data.get(product_name, {}).get("review_count", "N/A")
         rating = review_rating_data.get(product_name, {}).get("rating", "N/A")
+        if isinstance(rating, (int, float)):
+            rating = f"{rating:.2f}"
 
         # Combine data
         result_data.append({
