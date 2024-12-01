@@ -71,9 +71,9 @@ def get_product_data(image_path):
     print("GPT 응답 원본:", response_content)
 
     if response_content.startswith("```json"):
-        response_content = response_content[7:]  # ```json 제거
+        response_content = response_content[7:] 
     if response_content.endswith("```"):
-        response_content = response_content[:-3]  # ``` 제거
+        response_content = response_content[:-3] 
 
     # 작은따옴표를 큰따옴표로 변환
     response_content = response_content.replace("'", '"')
