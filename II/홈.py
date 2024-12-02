@@ -8,7 +8,7 @@ st.set_page_config(
 
 
 # 제목 및 소개
-st.write("# 이미지 분석을 통한 AI 추천 서비스")
+st.write("## 이미지 분석을 통한 RAG기반 실시간 AI 추천 서비스")
 
 st.markdown(
     """

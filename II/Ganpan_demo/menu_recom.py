@@ -78,7 +78,8 @@ def recommend_best_menus(input_data):
     # Prompt 정의
     template = '''    
         ("system", "당신은 매장의 베스트메뉴를 고객에게 추천하는 AI입니다. 아래의 컨텍스트를 바탕으로 질문에 답변하세요. "
-        "응답은 JSON 형식으로 작성하며, 키는 'best_menus'이며, 값은 메뉴 이름과 설명의 리스트입니다."
+        "응답은 JSON 형식으로 작성하며, 키는 'best_menus'이며, 값은 메뉴 이름과 설명의 리스트입니다.
+        설명에 해당 메뉴의 가격과 별점을 가져올 수 있으면 추가해서 설명해주세요."
         ""),
         ("human", "컨텍스트: {context}\n\n질문: {question}")
     '''

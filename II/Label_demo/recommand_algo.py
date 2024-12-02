@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from secrets_manager import get_api_key
 from langchain_openai import OpenAIEmbeddings
 from sklearn.feature_extraction.text import TfidfVectorizer
-import streamlit as st  # Streamlit 모듈을 가져옵니다.
+import streamlit as st
 
 # OpenAI API Key 설정
 os.environ["OPENAI_API_KEY"] = st.secrets["GPT_API_KEY"]
@@ -39,7 +39,6 @@ def assign_rank_based_score(df, column_name, ascending=True):
 
     df[f"{column_name}_score"] = scores
     return df
-
 
 # 추천 점수 계산 함수
 def calculate_recommendation_scores(local_data, online_data):
@@ -97,69 +96,40 @@ def calculate_recommendation_scores(local_data, online_data):
 
     return df, recommendations
 
-
-def generate_gpt_embeddings(product_names):
+def calculate_combined_similarity(df):
     """
-    LangChain의 OpenAIEmbeddings를 사용하여 상품 이름의 임베딩 벡터를 생성.
+    상품 데이터프레임을 기반으로 TF-IDF 및 OpenAI 임베딩을 사용한 유사도 계산과 추천 결과 생성.
 
     Args:
-        product_names (list of str): 상품 이름 리스트.
+        df (pd.DataFrame): 상품 데이터프레임 (상품명 포함).
 
     Returns:
-        list of list: GPT 기반 임베딩 벡터 리스트.
+        tuple: (pd.DataFrame, list of dict)
+            - DataFrame: 입력 데이터프레임 (입력 변경 없음).
+            - list of dict: 각 상품에 대한 추천 결과.
     """
-    embeddings_model = OpenAIEmbeddings(model="text-embedding-ada-002")  # LangChain Embeddings
-    embeddings = []
-    
-    for name in product_names:
-        try:
-            embedding = embeddings_model.embed_query(name)  # 상품명으로 임베딩 생성
-            embeddings.append(embedding)
-        except Exception as e:
-            print(f"Error generating embedding for '{name}': {e}")
-            embeddings.append([0] * 1536)  # 기본 임베딩 벡터로 대체
-    
-    return embeddings
+    # Step 1: 상품 이름 리스트 추출
+    product_names = df['product_name'].tolist()
 
+    # Step 2: OpenAI 임베딩 생성
+    embeddings_model = OpenAIEmbeddings(model="text-embedding-ada-002")
+    embeddings = [embeddings_model.embed_query(name) for name in product_names]
 
-
-def calculate_similarity_recommendations(df):
-    """
-    추천 점수가 계산된 데이터프레임을 기반으로 TF-IDF, 추천 점수, GPT 기반 유사도를 결합하여 추천 생성.
-
-    Args:
-        df (pd.DataFrame): 추천 점수와 상품명을 포함한 데이터프레임.
-
-    Returns:
-        list of dict: 각 상품과 유사한 상품 추천 리스트.
-    """
-    # 상품 이름과 추천 점수를 포함하여 결합된 텍스트 생성
-    df['combined_features'] = df['product_name'] + df['recommend_score'].astype(str)
-
-    # Step 1: TF-IDF 유사도 계산
+    # Step 3: TF-IDF 유사도 계산
     tfidf_vectorizer = TfidfVectorizer()
-    tfidf_matrix = tfidf_vectorizer.fit_transform(df['product_name'])
+    tfidf_matrix = tfidf_vectorizer.fit_transform(product_names)
     tfidf_similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-    # Step 2: 추천 점수 기반 추가 유사도 행렬 계산
-    score_similarity_matrix = cosine_similarity(
-        df[['recommend_score']].values, df[['recommend_score']].values
-    )
+    # Step 4: 임베딩 유사도 계산
+    embedding_similarity_matrix = cosine_similarity(embeddings, embeddings)
 
-    # Step 3: GPT 임베딩 유사도 계산
-    combined_features = df['combined_features'].tolist()
-    gpt_embeddings = generate_gpt_embeddings(combined_features)  # GPT 임베딩 생성
-    gpt_similarity_matrix = cosine_similarity(gpt_embeddings, gpt_embeddings)
-
-    # Step 4: 유사도 행렬 결합 (TF-IDF, 추천 점수, GPT 기반 유사도)
+    # Step 5: TF-IDF와 임베딩 유사도 결합
     combined_similarity_matrix = (
-        0.2 * tfidf_similarity_matrix +  
-        0.3 * score_similarity_matrix +  
-        0.5 * gpt_similarity_matrix     
+        0.5 * tfidf_similarity_matrix +
+        0.5 * embedding_similarity_matrix
     )
 
-    # Step 5: 유사 상품 추천 생성
-    product_names = df['product_name'].tolist()
+    # Step 6: 유사 상품 추천 생성
     recommendations = []
     for idx, product in enumerate(product_names):
         similar_indices = combined_similarity_matrix[idx].argsort()[::-1][1:]  # Exclude self
