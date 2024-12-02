@@ -7,11 +7,11 @@ from langchain_core.output_parsers import StrOutputParser
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from secrets_manager import get_api_key
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.runnable import RunnablePassthrough
 import json
+import streamlit as st
 
 def get_book_ratings_and_reviews(input_data):
     """
@@ -24,8 +24,8 @@ def get_book_ratings_and_reviews(input_data):
         list: 각 책의 별점과 리뷰 수를 포함한 JSON 리스트.
     """
     # API 키 설정
-    os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
-    os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
+    os.environ["OPENAI_API_KEY"] = st.secrets["GPT_API_KEY"]
+    os.environ["TAVILY_API_KEY"] = st.secrets["TAVILY_API_KEY"]
 
     # 텍스트 Splitter 설정
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(

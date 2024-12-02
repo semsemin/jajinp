@@ -1,10 +1,11 @@
 import urllib.request
 import json
+import streamlit as st
 from secrets_manager import get_api_key
 
 def get_naver_api_credentials():
-    client_id = get_api_key(api_name='CLIENT_ID')
-    client_secret = get_api_key(api_name='CLIENT_SECRET')
+    client_id = st.secrets["CLIENT_ID"]
+    client_secret = st.secrets["CLIENT_SECRET"]
     return client_id, client_secret
 
 def search_product(product_name, client_id, client_secret):

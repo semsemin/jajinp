@@ -3,3 +3,4 @@ II/secrets.json
 __pycache__
 chroma_db
 image/
+II/.streamlit/secrets.toml

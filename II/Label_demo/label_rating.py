@@ -7,13 +7,15 @@ from langchain_openai import ChatOpenAI
 from langchain.schema.runnable import RunnablePassthrough
 import os
 import json
+import streamlit
+import streamlit as st
 
 def get_reviews_and_ratings(product_data):
     import os
 
     # Set environment variables
-    os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
-    os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
+    os.environ["OPENAI_API_KEY"] = st.secrets["GPT_API_KEY"]
+    os.environ["TAVILY_API_KEY"] = st.secrets["TAVILY_API_KEY"]
 
     # Initialize GPT settings
     llm = ChatOpenAI(

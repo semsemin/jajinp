@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import streamlit as st
-import pandas as pd
+
 
 # Streamlit UI에 DataFrame과 추천 리스트를 출력하는 함수
 def book_display_recommendations(df, recommendations):

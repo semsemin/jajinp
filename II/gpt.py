@@ -1,11 +1,10 @@
 import streamlit as st
 import base64
 from openai import OpenAI
-from secrets_manager import get_api_key
 import json
 
 # gpt api key 불러오기
-gpt_key = get_api_key(api_name='GPT_API_KEY')
+gpt_key =  st.secrets["GPT_API_KEY"]
 
 # 상품 정보 추출 함수
 def get_gpt_response(image_path):
