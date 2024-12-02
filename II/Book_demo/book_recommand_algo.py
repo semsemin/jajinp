@@ -1,3 +1,5 @@
+
+
 from langchain_core.documents import Document
 from langchain_community.tools import TavilySearchResults
 from langchain_openai import OpenAIEmbeddings

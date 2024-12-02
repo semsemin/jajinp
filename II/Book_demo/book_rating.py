@@ -1,3 +1,7 @@
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 from langchain_core.documents import Document
 from langchain_community.tools import TavilySearchResults
 from langchain_openai import OpenAIEmbeddings
