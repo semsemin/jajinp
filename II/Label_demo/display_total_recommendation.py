@@ -6,13 +6,12 @@ def display_recommendations(df, recommendations, similar):
     st.subheader("🛍️추천 결과🛍️")
     st.write('<small>추천 점수는 각 상품의 리뷰 수, 평점, 가격 차이를 다른 상품들과 비교한 상대적 순위를 기반으로 계산되었습니다.</small>', unsafe_allow_html=True)
     
-
     # 열 이름 변경
     df.rename(
         columns={
             "rating_score": "평점",
             "review_count_score": "리뷰수",
-            "price_difference_score":"오프라인과 온라인 가격 차이",
+            "price_difference_score": "오프라인과 온라인 가격 차이",
             "recommend_score": "총점",
             "product_name": "상품명"
         },
@@ -43,26 +42,26 @@ def display_recommendations(df, recommendations, similar):
     best_product = recommendations_df.iloc[0]
     st.success(f"✅ 분석 결과: **{best_product['상품명']}**(을)를 구매하는 것을 추천합니다.")
 
-    # 유사 상품 추천 출력
-    st.subheader("🌟 유사 상품 추천")
-    st.write('<small>유사도는 상품명과 추천 점수의 유사성을 기준으로 산출되었습니다.</small>', unsafe_allow_html=True)
+    # 유사 상품 추천 출력 (best_product만)
+    st.subheader(f"🌟 {best_product['상품명']} 유사 상품 추천")
+    st.write('<small> 추천 상품의 유사 상품과 해당 유사도입니다.</small>', unsafe_allow_html=True)
 
+    # `best_product`의 유사 상품만 필터링
     for rec in similar:
-        # 상품명 출력
-        st.write(f"- {rec['product_name']}")
+        if rec['product_name'] == best_product['상품명']:
+            # 유사 상품 데이터를 DataFrame으로 변환
+            df = pd.DataFrame(
+                rec['recommendations'],
+                columns=["유사 상품명", "유사도"]
+            )
 
-        # 유사 상품 데이터를 DataFrame으로 변환
-        df = pd.DataFrame(
-            rec['recommendations'],
-            columns=["유사 상품명", "유사도"]
-        )
+            # 유사도를 소수점 2자리로 포맷팅
+            df["유사도"] = df["유사도"].map("{:.2f}".format)
 
-        # 유사도를 소수점 2자리로 포맷팅
-        df["유사도"] = df["유사도"].map("{:.2f}".format)
+            # 순위 설정: index를 순위로
+            df.index = df.index + 1
+            df.index.name = "순위"
 
-        # 순위 설정: index를 순위로
-        df.index = df.index + 1
-        df.index.name = "순위"
-
-        # 표로 출력
-        st.table(df)
+            # 표로 출력
+            st.table(df)
+            break  # 해당 상품에 대해서만 유사 상품 출력 후 종료

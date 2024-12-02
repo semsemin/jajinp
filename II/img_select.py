@@ -2,7 +2,7 @@ import streamlit as st
 from PIL import Image
 import bring_img
 import gpt
-from Label_demo.recommand_algo import calculate_similarity_recommendations
+from Label_demo.recommand_algo import calculate_combined_similarity
 from Label_demo.recommand_algo import calculate_recommendation_scores
 from Label_demo.product_data import fetch_online_product_data
 from Label_demo.st_sort import display_sorted_products  # st_sort.py에서 display_sorted_products 가져오기
@@ -218,7 +218,7 @@ def img_select(task_type):
                     # Step 1: 추천 점수 계산
                     df, recommendations_list = calculate_recommendation_scores(local_data, detailed_data)  # 분리된 반환값 사용
                     # Step 2: 유사도 기반 추천 계산
-                    similarity_recommendations = calculate_similarity_recommendations(df)
+                    similarity_recommendations = calculate_combined_similarity(df)
                     display_recommendations(df,recommendations_list, similarity_recommendations)
 
                 
