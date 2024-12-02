@@ -23,8 +23,8 @@ def get_book_summaries_and_recommendations(input_data):
         list: 각 책의 제목, 줄거리 요약, 추천 독자를 포함한 JSON 리스트.
     """
     # API 키 설정
-    os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
-    os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
+    os.environ["OPENAI_API_KEY"] = st.secrets["GPT_API_KEY"]
+    os.environ["TAVILY_API_KEY"] = st.secrets["TAVILY_API_KEY"]
 
     # 텍스트 Splitter 설정
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(

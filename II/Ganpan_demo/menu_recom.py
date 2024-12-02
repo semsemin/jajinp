@@ -10,12 +10,13 @@ from langchain_openai import ChatOpenAI
 from secrets_manager import get_api_key
 import os
 import json
+import streamlit as st
 
 
 def recommend_best_menus(input_data):
     # API 키 설정
-    os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
-    os.environ["TAVILY_API_KEY"] = get_api_key('TAVILY_API_KEY')
+    os.environ["OPENAI_API_KEY"] = st.secrets["GPT_API_KEY"]
+    os.environ["TAVILY_API_KEY"] = st.secrets["TAVILY_API_KEY"]
 
     # 사용자 입력 데이터
     store_name = input_data['store name']

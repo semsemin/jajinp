@@ -4,9 +4,9 @@ import streamlit as st  # Streamlit 모듈을 가져옵니다.
 from secrets_manager import get_api_key
 from openai import OpenAI
 
-client_id = get_api_key('CLIENT_ID')
-client_secret = get_api_key('CLIENT_SECRET')
-gpt_key = get_api_key('GPT_API_KEY')
+gpt_key = st.secrets["GPT_API_KEY"]
+client_id = st.secrets["CLIENT_ID"]
+client_secret = st.secrets["CLIENT_SECRET"]
 
 def search_blog_reviews(product_name):
     query = urllib.parse.quote(f"{product_name}")

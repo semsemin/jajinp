@@ -6,10 +6,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from secrets_manager import get_api_key
 from langchain_openai import OpenAIEmbeddings
 from sklearn.feature_extraction.text import TfidfVectorizer
-
+import streamlit as st  # Streamlit 모듈을 가져옵니다.
 
 # OpenAI API Key 설정
-os.environ["OPENAI_API_KEY"] = get_api_key('GPT_API_KEY')
+os.environ["OPENAI_API_KEY"] = st.secrets["GPT_API_KEY"]
 
 # 최대 별점 추정 함수
 def estimate_max_rating(rating):
