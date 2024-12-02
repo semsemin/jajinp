@@ -127,7 +127,7 @@ pdfminer.six==20231228
 pdfplumber==0.11.4
 pi_heif==0.20.0
 pikepdf==9.4.2
-pillow==11.0.0
+pillow>=10.0.1,<11
 portalocker==3.0.0
 posthog==3.7.0
 propcache==0.2.0
