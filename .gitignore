@@ -1,5 +1,6 @@
 II/secrets.json
 .DS_Store
+chroma_db
 __pycache__
 image/
 II/.streamlit/secrets.toml
